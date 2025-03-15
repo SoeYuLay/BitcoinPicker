@@ -10,7 +10,28 @@ class PriceScreen extends StatefulWidget {
 
 class _PriceScreenState extends State<PriceScreen> {
   String selectedCurrency = 'AUD';
+  bool isWaiting = false;
+  Map<String, String> cryptoValues = {};
 
+  void getData() async{
+    isWaiting = true;
+    try{
+      Map<String,String> data = await CoinData().getCryptoExRate(selectedCurrency);
+      isWaiting = false;
+      setState(() {
+        cryptoValues = data;
+      });
+    }catch (e){
+      print(e);
+    }
+  }
+  
+  @override
+  void initState() {
+    super.initState();
+    getData();
+  }
+  
   DropdownButton<String> androidDropdown() {
     List<DropdownMenuItem<String>> dropdownItems = [];
     for (String currency in currenciesList) {
@@ -52,39 +73,15 @@ class _PriceScreenState extends State<PriceScreen> {
     );
   }
 
-  Map<String, String> coinValues = {};
-  bool isWaiting = false;
-
-  void getData() async {
-    isWaiting = true;
-    try {
-      var data = await CoinData().getCoinData(selectedCurrency);
-      isWaiting = false;
-      setState(() {
-        coinValues = data;
-
-      });
-    } catch (e) {
-      print(e);
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    getData();
-  }
-
-  Column makeCards() {
+  Column makeCards(){
     List<CryptoCard> cryptoCards = [];
-    for (String crypto in cryptoList) {
-
+    for(String crypto in cryptoList){
       cryptoCards.add(
-        CryptoCard(
-          cryptoCurrency: crypto,
-          selectedCurrency: selectedCurrency,
-          value: isWaiting ? '?' : (coinValues[crypto] ?? '?')
-        ),
+       CryptoCard(
+         selectCurrency: selectedCurrency,
+         cryptoCurrency: crypto,
+         cryptoValue: isWaiting ? '?' : cryptoValues[crypto],
+       )
       );
     }
     return Column(
@@ -98,6 +95,7 @@ class _PriceScreenState extends State<PriceScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('🤑 Coin Ticker'),
+        backgroundColor: Colors.lightBlueAccent,
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -118,36 +116,29 @@ class _PriceScreenState extends State<PriceScreen> {
 }
 
 class CryptoCard extends StatelessWidget {
-  const CryptoCard({
-    required this.value,
-    required this.selectedCurrency,
-    required this.cryptoCurrency,
-  });
+  CryptoCard({this.selectCurrency,this.cryptoCurrency,this.cryptoValue});
 
-  final String value;
-  final String selectedCurrency;
-  final String cryptoCurrency;
+  final cryptoValue;
+  final selectCurrency;
+  final cryptoCurrency;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(18.0, 18.0, 18.0, 0),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 0),
       child: Card(
         color: Colors.lightBlueAccent,
         elevation: 5.0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10.0),
+          borderRadius: BorderRadius.circular(10)
         ),
         child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
-          child: Text(
-            '1 $cryptoCurrency = $value $selectedCurrency',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 20.0,
-              color: Colors.white,
-            ),
-          ),
+          padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
+          child: Text('1 $cryptoCurrency = $cryptoValue $selectCurrency',textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20.0
+          ),),
         ),
       ),
     );

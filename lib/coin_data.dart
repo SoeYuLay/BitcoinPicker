@@ -1,6 +1,4 @@
-import 'dart:convert';
-
-import 'package:http/http.dart' as http;
+import 'package:bitcoin_ticker/services/network.dart';
 
 const List<String> currenciesList = [
   'AUD',
@@ -35,22 +33,17 @@ const List<String> cryptoList=[
 const openExRateURL = 'https://rest.coinapi.io/v1/exchangerate';
 const APIKey = 'e4e00177-9aec-4d80-a761-bd1e2fc095a5';
 
-class CoinData {
-  Future getCoinData(String selectedCurrency) async {
+class CoinData{
+  Future<dynamic> getCryptoExRate(String selectedQuoteCurrency) async {
     Map<String, String> cryptoPrices = {};
-    for (String crypto in cryptoList) {
-      var requestURL = Uri.parse(
-          '$openExRateURL/$crypto/$selectedCurrency?apikey=$APIKey');
-
-      http.Response response = await http.get(requestURL);
-      if (response.statusCode == 200) {
-        var decodedData = jsonDecode(response.body);
-        double price = decodedData['rate'];
-        cryptoPrices[crypto] = price.toStringAsFixed(0);
-      } else {
-        print(response.statusCode);
-        throw 'Problem with the get request';
-      }
+    Uri url;
+    double price;
+    for(String crypto in cryptoList){
+      url = Uri.parse('$openExRateURL/$crypto/$selectedQuoteCurrency?apikey=$APIKey');
+      var networkHelper = NetworkHelper(url: url);
+      var data = await networkHelper.getExRateData();
+      price = data['rate'];
+      cryptoPrices[crypto] = price.toStringAsFixed(0);
     }
     return cryptoPrices;
   }
