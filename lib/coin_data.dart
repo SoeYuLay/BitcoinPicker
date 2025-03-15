@@ -1,4 +1,5 @@
 import 'package:bitcoin_ticker/services/network.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 const List<String> currenciesList = [
   'AUD',
@@ -30,8 +31,6 @@ const List<String> cryptoList=[
   'LTC',
 ];
 
-const openExRateURL = 'https://rest.coinapi.io/v1/exchangerate';
-const APIKey = 'e4e00177-9aec-4d80-a761-bd1e2fc095a5';
 
 class CoinData{
   Future<dynamic> getCryptoExRate(String selectedQuoteCurrency) async {
@@ -39,7 +38,7 @@ class CoinData{
     Uri url;
     double price;
     for(String crypto in cryptoList){
-      url = Uri.parse('$openExRateURL/$crypto/$selectedQuoteCurrency?apikey=$APIKey');
+      url = Uri.parse('${dotenv.env['openExRateURL']}/$crypto/$selectedQuoteCurrency?apikey=${dotenv.env['APIKey']}');
       var networkHelper = NetworkHelper(url: url);
       var data = await networkHelper.getExRateData();
       price = data['rate'];
